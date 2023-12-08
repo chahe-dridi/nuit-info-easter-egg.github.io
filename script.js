@@ -113,7 +113,7 @@ function spawnObjects() {
     const currentTime = new Date();
     const minutes = currentTime.getMinutes();
 
-    if (minutes % 20 === 0) {
+    if (minutes % 1 === 0) {
         // Create a scene
         const scene = new THREE.Scene();
 
@@ -207,7 +207,7 @@ function spawnObjects() {
         const currentTime = new Date();
         const minutes = currentTime.getMinutes();
     
-        if (minutes % 20 === 0) {
+        if (minutes % 1 === 0) {
             // Clear the scene every 20 minutes
             clearScene();
         }
