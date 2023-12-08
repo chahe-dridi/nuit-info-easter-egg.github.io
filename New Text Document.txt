@@ -1,0 +1,412 @@
+// Import necessary components from Three.js
+import * as THREE from 'https://threejs.org/build/three.module.js';
+
+
+
+
+
+// Function to create a cube with customizable parameters and texture
+function createCube(size, textureUrl) {
+    // Create a cube's geometry with the specified size
+    const geometry = new THREE.BoxGeometry(size, size, size);
+
+    // Load the texture
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(textureUrl);
+
+    // Create a material with the texture (no color)
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+
+    // Create a cube mesh using the geometry and material
+    const cube = new THREE.Mesh(geometry, material);
+
+    // Return the created cube
+    return cube;
+}
+
+// Function to create a rectangle with customizable parameters and texture
+function createRectangle(width, height, textureUrl) {
+    // Create a rectangle's geometry with the specified width and height
+    const geometry = new THREE.PlaneGeometry(width, height);
+
+    // Load the texture for the rectangle
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(textureUrl);
+
+    // Create a material with the texture
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+
+    // Create a rectangle mesh using the geometry and material
+    const rectangle = new THREE.Mesh(geometry, material);
+
+    // Return the created rectangle
+    return rectangle;
+}
+
+
+function createStarfield() {
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ size: 0.1 });
+
+    const starsVertices = [];
+
+    for (let i = 0; i < 10000; i++) {  // Increase the number of stars
+        const x = (Math.random() - 0.5) * 200;
+        const y = (Math.random() - 0.5) * 200;
+        const z = (Math.random() - 0.5) * 200;
+
+        starsVertices.push(x, y, z);
+
+        // Generate a random color for each star
+        const color = new THREE.Color(Math.random(), Math.random(), Math.random());
+        starsMaterial.color = color;
+    }
+
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+
+    return stars;
+}
+
+
+// Function to create another shape of rectangle
+function createAnotherRectangle(width, height, textureUrl) {
+    // Create another shape of rectangle's geometry with the specified width and height
+    const geometry = new THREE.BoxGeometry(width, height, 0.1); // Adjust the depth as needed
+
+    // Load the texture for another rectangle
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(textureUrl);
+
+    // Create a material with the texture
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+
+    // Create another rectangle mesh using the geometry and material
+    const anotherRectangle = new THREE.Mesh(geometry, material);
+
+    // Return the created another rectangle
+    return anotherRectangle;
+}
+// Function to create another box with customizable parameters and texture
+function createAnotherBox(size, textureUrl, color) {
+    // Create another box's geometry with the specified size
+    const geometry = new THREE.CylinderGeometry(size, size, size, 32); // Use a cylinder geometry for a different shape
+
+    // Load the texture
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(textureUrl);
+
+    // Create a material with the texture and color
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+
+    // Create another box mesh using the geometry and material
+    const anotherBox = new THREE.Mesh(geometry, material);
+
+    // Return the created another box
+    return anotherBox;
+}
+
+// Function to spawn objects at random locations
+function spawnObjects() {
+    // Create a scene
+    const scene = new THREE.Scene();
+     
+
+    // Create a starfield
+    const starfield = createStarfield();
+    scene.add(starfield);
+
+
+
+
+    // Create a camera
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 15;
+    // Create a renderer
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000);  // Set a clear color (black in this case)
+    document.body.appendChild(renderer.domElement);
+    // Array to store draggable objects
+    const draggableObjects = [];
+
+    // Create an audio context
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Load the audio file
+    const audioElement = document.createElement('audio');
+    audioElement.src = 'sound1.mp3';
+    audioElement.crossOrigin = 'anonymous';
+
+    // Connect the audio element to the audio context
+    const audioSource = audioContext.createMediaElementSource(audioElement);
+    const gainNode = audioContext.createGain();
+    audioSource.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // Spawn a cube at a random position
+    const cube = createCube(1, 'chest.png');
+    cube.position.set(getRandomPosition(), getRandomPosition(), getRandomPosition());
+    draggableObjects.push(cube);
+    scene.add(cube);
+
+    // Spawn a rectangle with a picture at a random position
+    const rectangle = createRectangle(2, 1, 'glass.png');
+    rectangle.position.set(getRandomPosition(), getRandomPosition(), getRandomPosition());
+    draggableObjects.push(rectangle);
+    scene.add(rectangle);
+
+    // Spawn another shape of rectangle at a random position
+    const anotherRectangle = createAnotherRectangle(1, 1, 'pizza.png'); // Replace 'your_picture.png' with your image URL
+    anotherRectangle.position.set(getRandomPosition(), getRandomPosition(), getRandomPosition());
+    draggableObjects.push(anotherRectangle);
+    scene.add(anotherRectangle);
+
+    // Spawn another box at a random position
+    const anotherBox = createAnotherBox(1, 'tin.png', 0xffffff);
+    anotherBox.position.set(getRandomPosition(), getRandomPosition(), getRandomPosition());
+    draggableObjects.push(anotherBox);
+    scene.add(anotherBox);
+
+    // Raycaster for mouse interactions
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let selectedObject = null;
+
+    // Event listeners for mouse interactions
+    window.addEventListener('pointerdown', onMouseDown);
+    window.addEventListener('pointermove', onMouseMove);
+    window.addEventListener('pointerup', onMouseUp);
+
+
+
+    function launchFireworks() {
+        const fireworksEffect = new Fireworks();  // Correct capitalization here
+        fireworksEffect.initialize();
+        fireworksEffect.animate();
+    }
+    
+
+    function createShootingStar() {
+        const shootingStarGeometry = new THREE.TetrahedronGeometry(0.2); // Use TetrahedronGeometry for a more interesting shape
+        const shootingStarMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 0.5 });
+    
+        const shootingStar = new THREE.Mesh(shootingStarGeometry, shootingStarMaterial);
+    
+        // Initial position of the shooting star
+        const x = (Math.random() - 0.5) * 10;
+        const y = (Math.random() - 0.5) * 10;
+        const z = 10; // Initial z position behind the camera
+    
+        shootingStar.position.set(x, y, z);
+    
+        return shootingStar;
+    }
+    
+    // Function to animate shooting stars
+    function animateShootingStars(shootingStars) {
+        shootingStars.forEach((shootingStar) => {
+            // Move the shooting star towards the camera
+            shootingStar.position.z += 0.1;
+    
+            // Rotate the shooting star for a dynamic appearance
+            shootingStar.rotation.x += 0.05;
+            shootingStar.rotation.y += 0.05;
+    
+            // Reset position if the shooting star moves too far
+            if (shootingStar.position.z > 20) {
+                shootingStar.position.z = -10;
+                shootingStar.position.x = (Math.random() - 0.5) * 10;
+                shootingStar.position.y = (Math.random() - 0.5) * 10;
+            }
+        });
+    }
+    
+    // Usage: Call createShootingStar to create shooting stars and add them to the scene. Then, in your animate function, call animateShootingStars to update their positions.
+    const shootingStars = [];
+    
+    // Create three shooting stars
+    for (let i = 0; i < 3; i++) {
+        const shootingStar = createShootingStar();
+        scene.add(shootingStar);
+        shootingStars.push(shootingStar);
+    }
+
+    function createStarfield() {
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsMaterial = new THREE.PointsMaterial({ size: 0.1 });
+    
+        const starsVertices = [];
+    
+        for (let i = 0; i < 10000; i++) {
+            const x = (Math.random() - 0.5) * 200;
+            const y = (Math.random() - 0.5) * 200;
+            const z = (Math.random() - 0.5) * 200;
+    
+            starsVertices.push(x, y, z);
+        }
+    
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+    
+        return stars;
+    }
+
+
+    function animateWavingStars(stars, time) {
+        const position = stars.geometry.attributes.position;
+        const waveSpeed = 0.05; // Adjust the speed as needed
+    
+        for (let i = 0; i < position.count; i += 3) {
+            // Offset the y-position based on a sine function to create a waving effect
+            const yOffset = Math.sin((i + time) * waveSpeed) * 2;
+            position.array[i + 1] += yOffset;
+            position.array[i + 4] += yOffset;
+            position.array[i + 7] += yOffset;
+        }
+        position.needsUpdate = true;
+    }
+    // Render the scene
+    function animate() {
+        requestAnimationFrame(animate);
+    
+        // Rotate the objects
+        draggableObjects.forEach(object => {
+            object.rotation.x += 0.01;
+            object.rotation.y += 0.01;
+        });
+    
+        // Animate waving stars
+        animateWavingStars(starfield, Date.now() * 0.001);
+    
+        // Animate shooting stars
+        animateShootingStars(shootingStars);
+    
+        // Render the scene with the camera
+        renderer.render(scene, camera);
+    }
+
+    // Start the animation
+    animate();
+
+    // Function to handle mouse down event
+    function onMouseDown(event) {
+        event.preventDefault();
+
+        // Calculate normalized device coordinates (NDC)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Raycasting for object selection
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(draggableObjects);
+
+        if (intersects.length > 0) {
+            selectedObject = intersects[0].object;
+        }
+    }
+    window.addEventListener('pointerdown', onMouseDown);
+    window.addEventListener('pointermove', onMouseMove);
+    window.addEventListener('pointerup', onMouseUp);
+    
+    // Function to handle pointer move event
+    function onMouseMove(event) {
+        event.preventDefault();
+
+        if (selectedObject) {
+            // Calculate normalized device coordinates (NDC)
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Raycasting to update object position
+            raycaster.setFromCamera(mouse, camera);
+
+            // Calculate the intersection point on the plane
+            const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+            raycaster.ray.intersectPlane(plane, selectedObject.position);
+
+            // Reset rotation to prevent rotation during movement
+            selectedObject.rotation.set(0, 0, 0);
+        }
+    }
+
+    // Function to handle pointer up event
+   // Function to handle pointer up event
+   function onMouseUp() {
+    if (selectedObject) {
+        // Check if the selected object is close to the cube
+        const distanceThreshold = 2; // Adjust this threshold as needed
+
+        const cubePosition = cube.position.clone();
+        const objectPosition = selectedObject.position.clone();
+
+        const distance = cubePosition.distanceTo(objectPosition);
+
+        if (distance < distanceThreshold) {
+            // Determine the type of the selected object and remove the corresponding object
+            if (selectedObject === rectangle) {
+                scene.remove(rectangle);
+                const index = draggableObjects.indexOf(rectangle);
+                if (index !== -1) {
+                    draggableObjects.splice(index, 1);
+                }
+                // Play the delete sound
+                playDeleteSound();
+            } else if (selectedObject === anotherRectangle) {
+                scene.remove(anotherRectangle);
+                const index = draggableObjects.indexOf(anotherRectangle);
+                if (index !== -1) {
+                    draggableObjects.splice(index, 1);
+                }
+                // Play the delete sound
+                playDeleteSound();
+            } else if (selectedObject === anotherBox) {
+                scene.remove(anotherBox);
+                const index = draggableObjects.indexOf(anotherBox);
+                if (index !== -1) {
+                    draggableObjects.splice(index, 1);
+                }
+                // Play the delete sound
+                playDeleteSound();
+            }
+            console.log(draggableObjects);
+            // Check if all three objects are removed
+            if (draggableObjects.length === 1) {
+                // Redirect to a new page with an absolute path
+                window.location.href = 'http://localhost/nuite%20info/bottle/test1/dark.html'; // Adjust the path based on your project structure
+            }
+
+            // Reset the selected object to null
+            selectedObject = null;
+        }
+    }
+}
+function increaseShootingStars(factor) {
+    // Increase the number of shooting stars by cloning and adding new ones
+    for (let i = 0; i < factor; i++) {
+        const shootingStar = createShootingStar();
+        scene.add(shootingStar);
+        shootingStars.push(shootingStar);
+    }
+}
+
+if (someConditionIsMet) {
+    increaseShootingStars(5); // Increase by 5 shooting stars
+}
+// Function to play the delete sound
+function playDeleteSound() {
+    audioElement.currentTime = 0; // Reset the audio to the beginning
+    audioElement.play();
+}
+
+    // Function to get a random position between -5 and 5
+    function getRandomPosition() {
+        return (Math.random() - 0.5) * 10;
+    }
+
+      
+}
+
+// Call the spawnObjects function to set up the scene with objects at random locations
+spawnObjects();
+launchFireworks();
