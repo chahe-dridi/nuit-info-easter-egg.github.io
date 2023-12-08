@@ -404,7 +404,7 @@ function spawnObjects() {
             // Check if all three objects are removed
             if (draggableObjects.length === 1) {
                 // Redirect to a new page with an absolute path
-                window.location.href = 'http://localhost/nuite%20info/bottle/test1/dark.html'; // Adjust the path based on your project structure
+                window.location.href = 'test1/dark.html'; // Adjust the path based on your project structure
             }
 
             // Reset the selected object to null
